@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -7,7 +7,7 @@ import { useTheme } from '../../components/ui/useTheme';
 import { Card } from '../../components/ui/Card';
 import { Chip } from '../../components/ui/Chip';
 import { withAlpha } from '../../components/shared/colors';
-import { mockLinkedAccounts } from '../../constants/mockData';
+import { useAppStore } from '../../store/appStore';
 import { Colors, FontSize, Radius } from '../../constants/tokens';
 
 const SETTINGS_ITEMS = [
@@ -19,6 +19,8 @@ const SETTINGS_ITEMS = [
 export default function ProfileScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const isDarkMode = useAppStore((s) => s.isDarkMode);
+  const toggleDarkMode = useAppStore((s) => s.toggleDarkMode);
 
   function handleLogout() {
     Alert.alert(
@@ -57,25 +59,28 @@ export default function ProfileScreen() {
           </View>
         </Card>
 
-        <Text style={[styles.sectionTitle, { color: theme.textPrimary }]}>Cuentas vinculadas</Text>
+        <Text style={[styles.sectionTitle, { color: theme.textPrimary }]}>Apariencia</Text>
 
-        {mockLinkedAccounts.map((account) => (
-          <Card key={account.id} style={styles.accountRow}>
-            <View style={styles.accountInner}>
-              <View style={[styles.bankIcon, { backgroundColor: withAlpha(Colors.portfolio, 0.13) }]}>
-                <Ionicons name="business-outline" size={18} color={Colors.portfolio} />
-              </View>
-              <View style={styles.accountInfo}>
-                <Text style={[styles.bankName, { color: theme.textPrimary }]}>{account.bankName}</Text>
-                <Text style={[styles.accountNumber, { color: theme.textSecondary }]}>{account.accountNumber}</Text>
-              </View>
-              <Chip
-                label={account.isActive ? 'Activo' : 'Inactivo'}
-                color={account.isActive ? Colors.brand : Colors.danger}
+        <Card style={styles.themeCard}>
+          <View style={styles.themeRow}>
+            <View style={[styles.themeIcon, { backgroundColor: withAlpha(Colors.brand, 0.13) }]}>
+              <Ionicons
+                name={isDarkMode ? 'moon-outline' : 'sunny-outline'}
+                size={16}
+                color={Colors.brand}
               />
             </View>
-          </Card>
-        ))}
+            <Text style={[styles.themeLabel, { color: theme.textPrimary }]}>
+              {isDarkMode ? 'Modo oscuro' : 'Modo claro'}
+            </Text>
+            <Switch
+              value={isDarkMode}
+              onValueChange={toggleDarkMode}
+              trackColor={{ false: theme.border, true: Colors.brand }}
+              thumbColor="#fff"
+            />
+          </View>
+        </Card>
 
         <Text style={[styles.sectionTitle, { color: theme.textPrimary }]}>Configuracion</Text>
 
@@ -130,12 +135,10 @@ const styles = StyleSheet.create({
   profileName: { fontSize: FontSize.title, fontWeight: '600' },
   profileAccountType: { fontSize: FontSize.label, marginTop: 2 },
   sectionTitle: { fontSize: FontSize.body, fontWeight: '600', marginBottom: 12 },
-  accountRow: { marginBottom: 8, padding: 12 },
-  accountInner: { flexDirection: 'row', alignItems: 'center', columnGap: 12 },
-  bankIcon: { width: 38, height: 38, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  accountInfo: { flex: 1 },
-  bankName: { fontSize: FontSize.body, fontWeight: '500' },
-  accountNumber: { fontSize: FontSize.label, marginTop: 2 },
+  themeCard: { marginBottom: 24, padding: 14 },
+  themeRow: { flexDirection: 'row', alignItems: 'center', columnGap: 12 },
+  themeIcon: { width: 32, height: 32, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  themeLabel: { flex: 1, fontSize: FontSize.body },
   settingsCard: { padding: 0, marginBottom: 24, overflow: 'hidden' },
   settingRow: { flexDirection: 'row', alignItems: 'center', columnGap: 12, padding: 14 },
   settingIcon: { width: 32, height: 32, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },

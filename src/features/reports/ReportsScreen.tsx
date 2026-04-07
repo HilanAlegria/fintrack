@@ -1,23 +1,32 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../components/ui/useTheme';
 import { Card } from '../../components/ui/Card';
 import { formatCOP } from '../../components/shared/formatters';
 import { withAlpha } from '../../components/shared/colors';
-import { mockMonthlyMetrics, mockReports } from '../../constants/mockData';
+import { useAppStore } from '../../store/appStore';
+import { mockReports } from '../../constants/mockData';
 import { Colors, FontSize } from '../../constants/tokens';
 
 const BAR_MAX_HEIGHT = 80;
 
 export default function ReportsScreen() {
   const theme = useTheme();
+  const transactions = useAppStore((s) => s.transactions);
 
-  const maxIncome = Math.max(...mockMonthlyMetrics.map((m) => m.income));
-  const currentMonth = mockMonthlyMetrics[mockMonthlyMetrics.length - 1];
-  const balance = currentMonth.income - currentMonth.expenses;
-  const savingsRate = Math.round((balance / currentMonth.income) * 100);
+  const totalIncome = transactions
+    .filter((t) => t.type === 'income')
+    .reduce((acc, t) => acc + t.amount, 0);
+
+  const totalExpenses = transactions
+    .filter((t) => t.type === 'expense')
+    .reduce((acc, t) => acc + t.amount, 0);
+
+  const balance = totalIncome - totalExpenses;
+  const savingsRate = totalIncome > 0 ? Math.round((balance / totalIncome) * 100) : 0;
+  const hasData = transactions.length > 0;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }}>
@@ -31,9 +40,9 @@ export default function ReportsScreen() {
 
         <View style={styles.metricsGrid}>
           {[
-            { label: 'Ingresos', value: formatCOP(currentMonth.income), color: Colors.brand },
-            { label: 'Egresos', value: formatCOP(currentMonth.expenses), color: Colors.danger },
-            { label: 'Balance neto', value: formatCOP(balance), color: Colors.brand },
+            { label: 'Ingresos', value: formatCOP(totalIncome), color: Colors.brand },
+            { label: 'Egresos', value: formatCOP(totalExpenses), color: Colors.danger },
+            { label: 'Balance neto', value: formatCOP(balance), color: balance >= 0 ? Colors.brand : Colors.danger },
             { label: 'Tasa de ahorro', value: `${savingsRate}%`, color: Colors.warning },
           ].map((metric) => (
             <Card key={metric.label} style={styles.metricCard}>
@@ -43,48 +52,38 @@ export default function ReportsScreen() {
           ))}
         </View>
 
-        <Text style={[styles.sectionTitle, { color: theme.textPrimary }]}>Ingresos vs Egresos</Text>
+        <Text style={[styles.sectionTitle, { color: theme.textPrimary }]}>Resumen</Text>
 
-        <Card style={styles.chartCard}>
-          <View style={styles.chart}>
-            {mockMonthlyMetrics.map((m) => (
-              <View key={m.month} style={styles.barGroup}>
-                <View style={styles.bars}>
-                  <View
-                    style={[
-                      styles.bar,
-                      {
-                        height: (m.income / maxIncome) * BAR_MAX_HEIGHT,
-                        backgroundColor: Colors.brand,
-                        marginRight: 3,
-                      },
-                    ]}
-                  />
-                  <View
-                    style={[
-                      styles.bar,
-                      {
-                        height: (m.expenses / maxIncome) * BAR_MAX_HEIGHT,
-                        backgroundColor: Colors.danger,
-                      },
-                    ]}
-                  />
-                </View>
-                <Text style={[styles.barLabel, { color: theme.textSecondary }]}>{m.month}</Text>
-              </View>
-            ))}
+        {!hasData ? (
+          <View style={[styles.emptyWrap, { borderColor: theme.border }]}>
+            <Ionicons name="bar-chart-outline" size={36} color={theme.textSecondary} />
+            <Text style={[styles.emptyTitle, { color: theme.textPrimary }]}>Sin datos aun</Text>
+            <Text style={[styles.emptyDesc, { color: theme.textSecondary }]}>
+              Registra transacciones para ver tu resumen financiero aqui.
+            </Text>
           </View>
-          <View style={styles.legend}>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: Colors.brand }]} />
-              <Text style={[styles.legendLabel, { color: theme.textSecondary }]}>Ingresos</Text>
+        ) : (
+          <Card style={styles.summaryCard}>
+            <View style={styles.summaryRow}>
+              <View style={[styles.summaryDot, { backgroundColor: Colors.brand }]} />
+              <Text style={[styles.summaryLabel, { color: theme.textSecondary }]}>Ingresos totales</Text>
+              <Text style={[styles.summaryValue, { color: Colors.brand }]}>{formatCOP(totalIncome)}</Text>
             </View>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: Colors.danger }]} />
-              <Text style={[styles.legendLabel, { color: theme.textSecondary }]}>Egresos</Text>
+            <View style={styles.summaryRow}>
+              <View style={[styles.summaryDot, { backgroundColor: Colors.danger }]} />
+              <Text style={[styles.summaryLabel, { color: theme.textSecondary }]}>Egresos totales</Text>
+              <Text style={[styles.summaryValue, { color: Colors.danger }]}>{formatCOP(totalExpenses)}</Text>
             </View>
-          </View>
-        </Card>
+            <View style={[styles.summaryDivider, { backgroundColor: theme.border }]} />
+            <View style={styles.summaryRow}>
+              <View style={[styles.summaryDot, { backgroundColor: Colors.warning }]} />
+              <Text style={[styles.summaryLabel, { color: theme.textSecondary }]}>Balance</Text>
+              <Text style={[styles.summaryValue, { color: balance >= 0 ? Colors.brand : Colors.danger }]}>
+                {formatCOP(balance)}
+              </Text>
+            </View>
+          </Card>
+        )}
 
         <Text style={[styles.sectionTitle, { color: theme.textPrimary }]}>Reportes</Text>
 
@@ -102,7 +101,7 @@ export default function ReportsScreen() {
                 <Text style={[styles.reportTitle, { color: theme.textPrimary }]}>{report.title}</Text>
                 <Text style={[styles.reportFormat, { color: theme.textSecondary }]}>{report.format}</Text>
               </View>
-              <TouchableOpacity>
+              <TouchableOpacity onPress={() => Alert.alert('Proximamente', 'La exportacion de reportes estara disponible cuando se conecte el backend.')}>
                 <Ionicons name="download-outline" size={20} color={Colors.brand} />
               </TouchableOpacity>
             </View>
@@ -123,16 +122,15 @@ const styles = StyleSheet.create({
   metricLabel: { fontSize: FontSize.label, marginBottom: 6 },
   metricValue: { fontSize: 16, fontWeight: '700' },
   sectionTitle: { fontSize: FontSize.body, fontWeight: '600', marginBottom: 12 },
-  chartCard: { marginBottom: 24 },
-  chart: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', height: BAR_MAX_HEIGHT + 20, marginBottom: 12 },
-  barGroup: { alignItems: 'center', flex: 1 },
-  bars: { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 6 },
-  bar: { width: 12, borderRadius: 4 },
-  barLabel: { fontSize: 9, fontWeight: '500' },
-  legend: { flexDirection: 'row', columnGap: 16, justifyContent: 'center' },
-  legendItem: { flexDirection: 'row', alignItems: 'center', columnGap: 6 },
-  legendDot: { width: 8, height: 8, borderRadius: 4 },
-  legendLabel: { fontSize: FontSize.label },
+  emptyWrap: { alignItems: 'center', paddingVertical: 40, borderRadius: 14, borderWidth: 0.5, borderStyle: 'dashed', rowGap: 8, marginBottom: 24 },
+  emptyTitle: { fontSize: FontSize.body, fontWeight: '600' },
+  emptyDesc: { fontSize: FontSize.label, textAlign: 'center', paddingHorizontal: 32, lineHeight: 18 },
+  summaryCard: { marginBottom: 24 },
+  summaryRow: { flexDirection: 'row', alignItems: 'center', columnGap: 10, paddingVertical: 6 },
+  summaryDot: { width: 8, height: 8, borderRadius: 4 },
+  summaryLabel: { flex: 1, fontSize: FontSize.body },
+  summaryValue: { fontSize: FontSize.body, fontWeight: '600' },
+  summaryDivider: { height: 0.5, marginVertical: 8 },
   reportRow: { marginBottom: 8, padding: 12 },
   reportInner: { flexDirection: 'row', alignItems: 'center', columnGap: 12 },
   reportIcon: { width: 38, height: 38, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },

@@ -27,48 +27,57 @@ export default function PortfolioScreen() {
           <Text style={styles.heroAmount}>
             ${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
           </Text>
-          <Chip label="+$1,240 este mes" color="#fff" style={{ marginTop: 4 }} />
           <View style={styles.heroMetrics}>
             <View>
               <Text style={styles.heroMetricLabel}>Rentabilidad YTD</Text>
-              <Text style={styles.heroMetricValue}>+14.3%</Text>
+              <Text style={styles.heroMetricValue}>0.00%</Text>
             </View>
             <View style={styles.heroDivider} />
             <View>
               <Text style={styles.heroMetricLabel}>Nivel de riesgo</Text>
-              <Text style={styles.heroMetricValue}>Moderado</Text>
+              <Text style={styles.heroMetricValue}>-</Text>
             </View>
           </View>
         </View>
 
         <Text style={[styles.sectionTitle, { color: theme.textPrimary }]}>Posiciones activas</Text>
 
-        {positions.map((position) => {
-          const assetColor = getAssetColor(position.type);
-          const isPositive = position.returnPercent >= 0;
-          return (
-            <TouchableOpacity key={position.id}>
-              <Card style={styles.positionCard}>
-                <View style={styles.positionRow}>
-                  <View style={[styles.assetDot, { backgroundColor: assetColor }]} />
-                  <View style={styles.positionInfo}>
-                    <Text style={[styles.positionName, { color: theme.textPrimary }]}>{position.name}</Text>
-                    <Text style={[styles.positionDesc, { color: theme.textSecondary }]}>{position.description}</Text>
+        {positions.length === 0 ? (
+          <View style={[styles.emptyWrap, { borderColor: theme.border }]}>
+            <Ionicons name="trending-up-outline" size={36} color={theme.textSecondary} />
+            <Text style={[styles.emptyTitle, { color: theme.textPrimary }]}>Sin posiciones</Text>
+            <Text style={[styles.emptyDesc, { color: theme.textSecondary }]}>
+              Toca el boton + para agregar tu primera posicion de inversion.
+            </Text>
+          </View>
+        ) : (
+          positions.map((position) => {
+            const assetColor = getAssetColor(position.type);
+            const isPositive = position.returnPercent >= 0;
+            return (
+              <TouchableOpacity key={position.id}>
+                <Card style={styles.positionCard}>
+                  <View style={styles.positionRow}>
+                    <View style={[styles.assetDot, { backgroundColor: assetColor }]} />
+                    <View style={styles.positionInfo}>
+                      <Text style={[styles.positionName, { color: theme.textPrimary }]}>{position.name}</Text>
+                      <Text style={[styles.positionDesc, { color: theme.textSecondary }]}>{position.description}</Text>
+                    </View>
+                    <View style={{ alignItems: 'flex-end', rowGap: 4 }}>
+                      <Text style={[styles.positionPrice, { color: theme.textPrimary }]}>
+                        ${position.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      </Text>
+                      <Chip
+                        label={`${isPositive ? '+' : ''}${position.returnPercent}%`}
+                        color={isPositive ? Colors.brand : Colors.danger}
+                      />
+                    </View>
                   </View>
-                  <View style={{ alignItems: 'flex-end', rowGap: 4 }}>
-                    <Text style={[styles.positionPrice, { color: theme.textPrimary }]}>
-                      ${position.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                    </Text>
-                    <Chip
-                      label={`${isPositive ? '+' : ''}${position.returnPercent}%`}
-                      color={isPositive ? Colors.brand : Colors.danger}
-                    />
-                  </View>
-                </View>
-              </Card>
-            </TouchableOpacity>
-          );
-        })}
+                </Card>
+              </TouchableOpacity>
+            );
+          })
+        )}
       </ScrollView>
 
       <TouchableOpacity
@@ -87,72 +96,31 @@ const styles = StyleSheet.create({
   heroCard: { backgroundColor: Colors.portfolio, padding: 24, marginBottom: 24 },
   heroLabel: { color: 'rgba(255,255,255,0.7)', fontSize: FontSize.label, marginBottom: 6 },
   heroAmount: { color: '#fff', fontSize: 30, fontWeight: '700', marginBottom: 8 },
-  heroMetrics: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 16,
-  },
-  heroDivider: {
-    width: 1,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-  },
-  heroMetricLabel: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: FontSize.small,
-    marginBottom: 4,
-  },
-  heroMetricValue: {
-    color: '#fff',
-    fontSize: FontSize.body,
-    fontWeight: '600',
-  },
-  sectionTitle: {
-    fontSize: FontSize.title2,
-    fontWeight: '600',
-    marginBottom: 16,
-  },
-  positionCard: {
-    marginBottom: 12,
-  },
-  positionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  assetDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 12,
-  },
-  positionInfo: {
-    flex: 1,
-  },
-  positionName: {
-    fontSize: FontSize.body,
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  positionDesc: {
-    fontSize: FontSize.small,
-  },
-  positionPrice: {
-    fontSize: FontSize.body,
-    fontWeight: '600',
-  },
+  heroMetrics: { flexDirection: 'row', alignItems: 'center', columnGap: 20, marginTop: 20 },
+  heroMetricLabel: { color: 'rgba(255,255,255,0.7)', fontSize: FontSize.label, marginBottom: 4 },
+  heroMetricValue: { color: '#fff', fontSize: FontSize.body, fontWeight: '600' },
+  heroDivider: { width: 1, height: 36, backgroundColor: 'rgba(255,255,255,0.2)' },
+  sectionTitle: { fontSize: FontSize.body, fontWeight: '600', marginBottom: 12 },
+  emptyWrap: { alignItems: 'center', paddingVertical: 40, borderRadius: Radius.card, borderWidth: 0.5, borderStyle: 'dashed', rowGap: 8 },
+  emptyTitle: { fontSize: FontSize.body, fontWeight: '600' },
+  emptyDesc: { fontSize: FontSize.label, textAlign: 'center', paddingHorizontal: 32, lineHeight: 18 },
+  positionCard: { marginBottom: 8 },
+  positionRow: { flexDirection: 'row', alignItems: 'center', columnGap: 12 },
+  assetDot: { width: 10, height: 10, borderRadius: 5 },
+  positionInfo: { flex: 1 },
+  positionName: { fontSize: FontSize.body, fontWeight: '600' },
+  positionDesc: { fontSize: FontSize.label, marginTop: 2 },
+  positionPrice: { fontSize: FontSize.body, fontWeight: '600' },
   fab: {
     position: 'absolute',
-    bottom: 20,
-    right: 20,
+    bottom: 24,
+    right: 24,
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: Colors.brand,
-    justifyContent: 'center',
+    backgroundColor: Colors.portfolio,
     alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
+    justifyContent: 'center',
+    elevation: 8,
   },
 });

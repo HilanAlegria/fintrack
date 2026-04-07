@@ -17,7 +17,6 @@ const TABS: TabConfig[] = [
   { name: 'expenses', title: 'Gastos', icon: 'alert-circle-outline', iconFocused: 'alert-circle' },
   { name: 'portfolio', title: 'Cartera', icon: 'trending-up-outline', iconFocused: 'trending-up' },
   { name: 'reports', title: 'Reportes', icon: 'document-text-outline', iconFocused: 'document-text' },
-  { name: 'profile', title: 'Perfil', icon: 'person-outline', iconFocused: 'person' },
 ];
 
 export default function TabLayout() {
@@ -64,6 +63,21 @@ export default function TabLayout() {
           }}
         />
       ))}
+
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Perfil',
+          href: '/(tabs)/profile',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? 'person' : 'person-outline'}
+              size={22}
+              color={color}
+            />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

@@ -7,33 +7,68 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../src/components/ui/useTheme';
+import { useAppStore } from '../../src/store/appStore';
 import { Colors, FontSize, Radius } from '../../src/constants/tokens';
 import { withAlpha } from '../../src/components/shared/colors';
+import type { Transaction } from '../../src/types';
 
 type TransactionType = 'income' | 'expense';
 
 const CATEGORIES_EXPENSE = ['Alimentacion', 'Transporte', 'Entretenimiento', 'Salud', 'Educacion', 'Otro'];
 const CATEGORIES_INCOME = ['Nomina', 'Freelance', 'Inversiones', 'Otro'];
 
+const ICON_MAP: Record<string, string> = {
+  Alimentacion: 'restaurant-outline',
+  Transporte: 'car-outline',
+  Entretenimiento: 'game-controller-outline',
+  Salud: 'medkit-outline',
+  Educacion: 'book-outline',
+  Nomina: 'briefcase-outline',
+  Freelance: 'laptop-outline',
+  Inversiones: 'trending-up-outline',
+  Otro: 'ellipse-outline',
+};
+
 export default function TransactionFormModal() {
   const theme = useTheme();
   const router = useRouter();
+  const addTransaction = useAppStore((s) => s.addTransaction);
 
   const [type, setType] = useState<TransactionType>('expense');
   const [amount, setAmount] = useState('');
   const [name, setName] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const categories = type === 'expense' ? CATEGORIES_EXPENSE : CATEGORIES_INCOME;
 
-  function handleSave() {
+  async function handleSave() {
     if (!amount || !name || !selectedCategory) {
       Alert.alert('Campos incompletos', 'Por favor completa todos los campos.');
       return;
     }
-    Alert.alert('Transaccion guardada', 'La transaccion fue registrada correctamente.', [
-      { text: 'OK', onPress: () => router.back() },
-    ]);
+
+    const parsed = parseFloat(amount.replace(/\./g, '').replace(',', '.'));
+    if (isNaN(parsed) || parsed <= 0) {
+      Alert.alert('Monto invalido', 'Ingresa un monto valido mayor a cero.');
+      return;
+    }
+
+    setSaving(true);
+
+    const tx: Transaction = {
+      id: Date.now().toString(),
+      name,
+      category: selectedCategory,
+      amount: parsed,
+      type,
+      date: new Date().toISOString().split('T')[0],
+      icon: ICON_MAP[selectedCategory] ?? 'ellipse-outline',
+    };
+
+    await addTransaction(tx);
+    setSaving(false);
+    router.back();
   }
 
   return (
@@ -43,8 +78,10 @@ export default function TransactionFormModal() {
           <Ionicons name="close" size={24} color={theme.textPrimary} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: theme.textPrimary }]}>Nueva transaccion</Text>
-        <TouchableOpacity onPress={handleSave}>
-          <Text style={[styles.saveBtn, { color: Colors.brand }]}>Guardar</Text>
+        <TouchableOpacity onPress={handleSave} disabled={saving}>
+          <Text style={[styles.saveBtn, { color: saving ? theme.textSecondary : Colors.brand }]}>
+            {saving ? 'Guardando...' : 'Guardar'}
+          </Text>
         </TouchableOpacity>
       </View>
 
