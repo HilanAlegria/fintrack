@@ -22,6 +22,8 @@ export default function DashboardScreen() {
   const router = useRouter();
   const transactions = useAppStore((s) => s.transactions);
 
+  const user = useAppStore((s) => s.user);
+
   const totalIncome = transactions
     .filter((t) => t.type === 'income')
     .reduce((acc, t) => acc + t.amount, 0);
@@ -41,7 +43,7 @@ export default function DashboardScreen() {
         <View style={styles.header}>
           <View>
             <Text style={[styles.greeting, { color: theme.textSecondary }]}>Buenos dias</Text>
-            <Text style={[styles.userName, { color: theme.textPrimary }]}>Bienvenido</Text>
+            <Text style={[styles.userName, { color: theme.textPrimary }]}>{user?.name ?? 'Bienvenido'}</Text>
           </View>
           <TouchableOpacity
             style={[styles.notifBtn, { backgroundColor: theme.surfaceSolid, borderColor: theme.border }]}

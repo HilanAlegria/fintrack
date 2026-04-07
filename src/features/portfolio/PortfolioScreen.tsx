@@ -82,7 +82,7 @@ export default function PortfolioScreen() {
 
       <TouchableOpacity
         style={styles.fab}
-        onPress={() => router.push('/modal/coming-soon')}
+        onPress={() => router.push('/modal/portfolio-form')}
       >
         <Ionicons name="add" size={28} color="#fff" />
       </TouchableOpacity>

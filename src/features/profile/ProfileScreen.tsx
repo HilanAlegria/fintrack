@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, Switch } f
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
 import { useTheme } from '../../components/ui/useTheme';
 import { Card } from '../../components/ui/Card';
 import { Chip } from '../../components/ui/Chip';
@@ -21,6 +22,8 @@ export default function ProfileScreen() {
   const router = useRouter();
   const isDarkMode = useAppStore((s) => s.isDarkMode);
   const toggleDarkMode = useAppStore((s) => s.toggleDarkMode);
+  const logout = useAppStore((s) => s.logout);
+  const user = useAppStore((s) => s.user);
 
   function handleLogout() {
     Alert.alert(
@@ -28,10 +31,23 @@ export default function ProfileScreen() {
       'Estas seguro que deseas cerrar sesion?',
       [
         { text: 'Cancelar', style: 'cancel' },
-        { text: 'Cerrar sesion', style: 'destructive', onPress: () => {} },
+        {
+          text: 'Cerrar sesion',
+          style: 'destructive',
+          onPress: async () => {
+            await SecureStore.deleteItemAsync('fintrack_token');
+            await SecureStore.deleteItemAsync('fintrack_user');
+            logout();
+            router.replace('/(auth)/login');
+          },
+        },
       ]
     );
   }
+
+  const displayName = user?.name ?? 'Usuario';
+  const displayEmail = user?.email ?? '';
+  const initials = displayName.slice(0, 2).toUpperCase();
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }}>
@@ -49,12 +65,11 @@ export default function ProfileScreen() {
         <Card style={styles.profileCard}>
           <View style={styles.profileRow}>
             <View style={styles.avatar}>
-              <Text style={styles.avatarText}>AG</Text>
+              <Text style={styles.avatarText}>{initials}</Text>
             </View>
             <View style={styles.profileInfo}>
-              <Text style={[styles.profileName, { color: theme.textPrimary }]}>Alejandro Garcia</Text>
-              <Text style={[styles.profileAccountType, { color: theme.textSecondary }]}>Cuenta personal</Text>
-              <Chip label="Pro" color={Colors.warning} style={{ marginTop: 6 }} />
+              <Text style={[styles.profileName, { color: theme.textPrimary }]}>{displayName}</Text>
+              <Text style={[styles.profileAccountType, { color: theme.textSecondary }]}>{displayEmail}</Text>
             </View>
           </View>
         </Card>

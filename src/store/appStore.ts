@@ -41,13 +41,23 @@ async function writeJSON(path: string, data: unknown) {
   await FileSystem.writeAsStringAsync(path, JSON.stringify(data));
 }
 
+interface User {
+  name: string;
+  email: string;
+  plan: string;
+}
+
 export interface AppState {
   isDarkMode: boolean;
+  isAuthenticated: boolean;
+  user: User | null;
   transactions: Transaction[];
   budgetCategories: BudgetCategory[];
   portfolioPositions: PortfolioPosition[];
   hydrated: boolean;
   toggleDarkMode: () => void;
+  setAuth: (isAuthenticated: boolean, user: User | null) => void;
+  logout: () => void;
   hydrate: () => Promise<void>;
   addTransaction: (tx: Transaction) => Promise<void>;
   addPortfolioPosition: (position: PortfolioPosition) => Promise<void>;
@@ -55,12 +65,24 @@ export interface AppState {
 
 export const useAppStore = create<AppState>((set, get) => ({
   isDarkMode: true,
+  isAuthenticated: false,
+  user: null,
   transactions: [],
   budgetCategories: DEFAULT_BUDGET_CATEGORIES,
   portfolioPositions: [],
   hydrated: false,
 
   toggleDarkMode: () => set((state) => ({ isDarkMode: !state.isDarkMode })),
+
+  setAuth: (isAuthenticated, user) => set({ isAuthenticated, user }),
+
+  logout: () => set({
+    isAuthenticated: false,
+    user: null,
+    transactions: [],
+    budgetCategories: DEFAULT_BUDGET_CATEGORIES,
+    portfolioPositions: [],
+  }),
 
   hydrate: async () => {
     try {
