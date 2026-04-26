@@ -48,3 +48,24 @@ export interface LinkedAccount {
   accountNumber: string;
   isActive: boolean;
 }
+
+export interface Transfer {
+  id: string;
+  fromAccount: string;
+  toAccount: string;
+  amount: number;
+  date: string;
+  note: string;
+}
+
+export type GoalStatus = 'active' | 'completed';
+
+export interface Goal {
+  id: string;
+  name: string;
+  description: string;
+  targetAmount: number;
+  savedAmount: number;
+  deadline: string;
+  status: GoalStatus;
+}

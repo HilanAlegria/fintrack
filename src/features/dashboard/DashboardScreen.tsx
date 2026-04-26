@@ -11,9 +11,9 @@ import { withAlpha } from '../../components/shared/colors';
 import { Colors, FontSize, Radius } from '../../constants/tokens';
 
 const QUICK_ACTIONS = [
-  { label: 'Transferir', icon: 'arrow-forward-circle-outline', route: '/modal/coming-soon' },
+  { label: 'Transferir', icon: 'arrow-forward-circle-outline', route: '/modal/transfer-form' },
   { label: 'Analizar', icon: 'bar-chart-outline', route: '/(tabs)/reports' },
-  { label: 'Metas', icon: 'flag-outline', route: '/modal/coming-soon' },
+  { label: 'Metas', icon: 'flag-outline', route: '/goals' },
   { label: 'Registrar', icon: 'add-circle-outline', route: '/modal/transaction-form' },
 ] as const;
 

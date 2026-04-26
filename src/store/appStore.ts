@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import * as FileSystem from 'expo-file-system/legacy';
-import type { Transaction, BudgetCategory, PortfolioPosition } from '../types';
+import type { Transaction, BudgetCategory, PortfolioPosition, Transfer, Goal } from '../types';
 
 const STORAGE_DIR = FileSystem.documentDirectory + 'fintrack/';
 
@@ -8,6 +8,8 @@ const PATHS = {
   transactions: STORAGE_DIR + 'transactions.json',
   budgetCategories: STORAGE_DIR + 'budgetCategories.json',
   portfolioPositions: STORAGE_DIR + 'portfolioPositions.json',
+  transfers: STORAGE_DIR + 'transfers.json',
+  goals: STORAGE_DIR + 'goals.json',
 };
 
 const DEFAULT_BUDGET_CATEGORIES: BudgetCategory[] = [
@@ -54,6 +56,8 @@ export interface AppState {
   transactions: Transaction[];
   budgetCategories: BudgetCategory[];
   portfolioPositions: PortfolioPosition[];
+  transfers: Transfer[];
+  goals: Goal[];
   hydrated: boolean;
   toggleDarkMode: () => void;
   setAuth: (isAuthenticated: boolean, user: User | null) => void;
@@ -61,6 +65,10 @@ export interface AppState {
   hydrate: () => Promise<void>;
   addTransaction: (tx: Transaction) => Promise<void>;
   addPortfolioPosition: (position: PortfolioPosition) => Promise<void>;
+  addTransfer: (transfer: Transfer) => Promise<void>;
+  addGoal: (goal: Goal) => Promise<void>;
+  updateGoalSavings: (goalId: string, amount: number) => Promise<void>;
+  completeGoal: (goalId: string) => Promise<void>;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -70,6 +78,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   transactions: [],
   budgetCategories: DEFAULT_BUDGET_CATEGORIES,
   portfolioPositions: [],
+  transfers: [],
+  goals: [],
   hydrated: false,
 
   toggleDarkMode: () => set((state) => ({ isDarkMode: !state.isDarkMode })),
@@ -82,16 +92,20 @@ export const useAppStore = create<AppState>((set, get) => ({
     transactions: [],
     budgetCategories: DEFAULT_BUDGET_CATEGORIES,
     portfolioPositions: [],
+    transfers: [],
+    goals: [],
   }),
 
   hydrate: async () => {
     try {
-      const [transactions, budgetCategories, portfolioPositions] = await Promise.all([
+      const [transactions, budgetCategories, portfolioPositions, transfers, goals] = await Promise.all([
         readJSON<Transaction[]>(PATHS.transactions, []),
         readJSON<BudgetCategory[]>(PATHS.budgetCategories, DEFAULT_BUDGET_CATEGORIES),
         readJSON<PortfolioPosition[]>(PATHS.portfolioPositions, []),
+        readJSON<Transfer[]>(PATHS.transfers, []),
+        readJSON<Goal[]>(PATHS.goals, []),
       ]);
-      set({ transactions, budgetCategories, portfolioPositions, hydrated: true });
+      set({ transactions, budgetCategories, portfolioPositions, transfers, goals, hydrated: true });
     } catch {
       set({ hydrated: true });
     }
@@ -120,5 +134,39 @@ export const useAppStore = create<AppState>((set, get) => ({
     const updated = [position, ...current];
     set({ portfolioPositions: updated });
     await writeJSON(PATHS.portfolioPositions, updated);
+  },
+
+  addTransfer: async (transfer) => {
+    const current = get().transfers;
+    const updated = [transfer, ...current];
+    set({ transfers: updated });
+    await writeJSON(PATHS.transfers, updated);
+  },
+
+  addGoal: async (goal) => {
+    const current = get().goals;
+    const updated = [goal, ...current];
+    set({ goals: updated });
+    await writeJSON(PATHS.goals, updated);
+  },
+
+  updateGoalSavings: async (goalId, amount) => {
+    const goals = get().goals;
+    const updated = goals.map((g) =>
+      g.id === goalId
+        ? { ...g, savedAmount: Math.min(g.savedAmount + amount, g.targetAmount) }
+        : g
+    );
+    set({ goals: updated });
+    await writeJSON(PATHS.goals, updated);
+  },
+
+  completeGoal: async (goalId) => {
+    const goals = get().goals;
+    const updated = goals.map((g) =>
+      g.id === goalId ? { ...g, status: 'completed' as const } : g
+    );
+    set({ goals: updated });
+    await writeJSON(PATHS.goals, updated);
   },
 }));

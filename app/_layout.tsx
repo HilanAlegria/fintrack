@@ -30,7 +30,9 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (!hydrated) return;
-    const inAuth = segments[0] === '(auth)';
+    const currentSegment = segments[0];
+    if (!currentSegment) return;
+    const inAuth = currentSegment === '(auth)';
     if (!isAuthenticated && !inAuth) {
       router.replace('/(auth)/login');
     } else if (isAuthenticated && inAuth) {
@@ -39,23 +41,32 @@ export default function RootLayout() {
   }, [isAuthenticated, hydrated, segments]);
 
   return (
-    <SafeAreaProvider>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen
-          name="modal/coming-soon"
-          options={{ presentation: 'modal' }}
-        />
-        <Stack.Screen
-          name="modal/transaction-form"
-          options={{ presentation: 'modal' }}
-        />
-        <Stack.Screen
-          name="modal/portfolio-form"
-          options={{ presentation: 'modal' }}
-        />
-      </Stack>
-    </SafeAreaProvider>
-  );
+  <SafeAreaProvider>
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(auth)" />
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="goals" />
+      <Stack.Screen
+        name="modal/coming-soon"
+        options={{ presentation: 'modal' }}
+      />
+      <Stack.Screen
+        name="modal/transaction-form"
+        options={{ presentation: 'modal' }}
+      />
+      <Stack.Screen
+        name="modal/portfolio-form"
+        options={{ presentation: 'modal' }}
+      />
+      <Stack.Screen
+        name="modal/transfer-form"
+        options={{ presentation: 'modal' }}
+      />
+      <Stack.Screen
+        name="modal/goal-form"
+        options={{ presentation: 'modal' }}
+      />
+    </Stack>
+  </SafeAreaProvider>
+);
 }
